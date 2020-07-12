@@ -33,13 +33,19 @@ data_transforms = {
     ]),
 }
 
-data_dir = 'rgb/'
+#input data location
+data_dir = 'input/'
+
+#images should be placed under folders named "train" and "val"
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                           data_transforms[x])
                   for x in ['train', 'val']}
+
+#loads input data with batch size 16
 dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=16,
                                              shuffle=True, num_workers=0)
               for x in ['train', 'val']}
+
 dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
 class_names = image_datasets['train'].classes
 print(dataset_sizes)
@@ -52,7 +58,6 @@ inputs, classes = next(iter(dataloaders['train']))
 
 # Make a grid from batch
 out = torchvision.utils.make_grid(inputs)
-
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     since = time.time()
@@ -146,6 +151,7 @@ exp_lr_scheduler = lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
 model_conv = train_model(model_conv, criterion, optimizer_conv,
                          exp_lr_scheduler, num_epochs=25)
 
+#number of classes should be defined for confusion matrix
 nb_classes = 2
 
 #creates and visualizes a confusion matrix
