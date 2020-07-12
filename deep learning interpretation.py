@@ -15,17 +15,15 @@ import torchvision
 from torchvision import datasets, models, transforms
 
 from captum.attr import IntegratedGradients
-from captum.attr import Saliency
-from captum.attr import DeepLift
-from captum.attr import NoiseTunnel
-from captum.attr import visualization as viz
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+#name of the network that will be used in interpretation
 model = torch.load('resnet_network_rgb')
 model.to(device)
 model.eval()
 
+#normalize validation images
 transform = transforms.Compose([
  transforms.CenterCrop(224),
  transforms.ToTensor(),
@@ -33,7 +31,6 @@ transform = transforms.Compose([
  ])
 
 class ImageFolderWithPaths(datasets.ImageFolder):
-
     # override the __getitem__ method. this is the method that dataloader calls
     def __getitem__(self, index):
         # this is what ImageFolder normally returns 
@@ -44,6 +41,7 @@ class ImageFolderWithPaths(datasets.ImageFolder):
         tuple_with_path = (original_tuple + (path,))
         return tuple_with_path
 
+#location of validation data       
 data_dir = 'rgb/val/'
 
 image_dataset = ImageFolderWithPaths(root=data_dir, transform=transform)
@@ -80,10 +78,9 @@ for ind in range(0,198):
         return tensor_attributions
     
     ig = IntegratedGradients(model)
-    nt = NoiseTunnel(ig)
-    attr_ig_nt = attribute_image_features(nt, input, baselines=input * 0, nt_type='smoothgrad_sq',
-                                          n_samples=10, stdevs=0.2)
-    attr_ig_nt = np.transpose(attr_ig_nt.squeeze(0).cpu().detach().numpy(), (1, 2, 0))
+    attr_ig, delta = attribute_image_features(ig, input, baselines=input * 0, return_convergence_delta=True)
+    attr_ig = np.transpose(attr_ig.squeeze().cpu().detach().numpy(), (1, 2, 0))
+    print('Approximation delta: ', abs(delta))
 
     print('Original Image')
     print('Predicted:', classes[predicted[ind]], 
@@ -91,7 +88,7 @@ for ind in range(0,198):
     
     original_image = np.transpose((inputs[ind].cpu().detach().numpy() / 2) + 0.5, (1, 2, 0))
     
-    _ = viz.visualize_image_attr(attr_ig_nt,original_image, method="original_image", sign="absolute_value", outlier_perc=2,fig_size=(8,8), show_colorbar=False)
+    _ = viz.visualize_image_attr(attr_ig, original_image, method="blended_heat_map",sign="all",show_colorbar=True, title="Overlayed Integrated Gradients")
      
     plt.savefig('Figures_rgb/fig'+str(ind)+'.png',bbox_inches='tight',pad_inches=0)
         
