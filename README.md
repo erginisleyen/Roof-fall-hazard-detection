@@ -2,7 +2,7 @@
 
 The Python scripts for manuscript titled "Roof fall hazard detection with convolutional neural networks using transfer learning" by Ergin Isleyen
 
-This repository is a part of manuscript submission to Tunneling and Underground Space Technology Journal.
+This repository is a part of manuscript submission to Journal of Rock Mechanics and Geotechnical Engineering.
 
 ///"CNN_resnet_transfer-learning.py"///
 
